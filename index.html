@@ -22,10 +22,10 @@
     <div class="loader"> </div>
   </div>
   <div style="display: flex; align-items: center; margin-left: 10px; margin-top: 10px;">
-    <input type="file" id="inputFile" accept=".xlsx" style="width: 50em;" />
+    <input type="file" id="inputFile" accept=".xlsx" style="width: 50em;" onclick="deleteTableContent()" />
   </div>
   <hr />
-  <div style="display: flex; align-items: center; margin-left: 10px;">
+  <div style="display: flex; align-items: center; margin-left: 10px; text-align: center;">
     <table id="tbl-data"></table>
   </div>
 
@@ -36,21 +36,32 @@
   <script>
 
     var input = document.getElementById("inputFile");
-    // console.log(input)
-    // console.log(input.files[0])
-    console.log(input.files.length);
-
     if (input.files.length == 0) {
       document.getElementById("confirm").disabled = true;
+    }
+
+    function deleteTableContent() {
+      // alert('Se borro')
+      const tableCont = document.querySelector("#tbl-data");
+      const btnLimpiar = document.querySelector("#inputFile");
+      btnLimpiar.addEventListener('click', () => {
+        tableCont.innerHTML = ""
+      })
     }
 
     input.addEventListener("change", function () {
       readXlsxFile(input.files[0]).then(function (data) {
         var index = 0;
-        console.log(input.files.length);
+        // console.log(input.files.length);
         if (input.files.length >= 1) {
           document.getElementById("confirm").disabled = false;
         }
+
+
+        /*Busca los indices que concuerden con
+        la busqueda la información enre 'Energia porteada' y
+        'Energía Normal Por Faltante'
+        */
         const indexEP = data.findIndex(numIndexEP => numIndexEP[1] === 'ENERGIA PORTEADA');
         // console.log(indexEP);
         var newData = []
@@ -61,6 +72,8 @@
         }
         newData.reverse();
         // console.log(newData);
+
+
         const indexEN = newData.findIndex(numIndexEN => numIndexEN[1] === 'ENERGIA NORMAL POR FALTANTE');
         // console.log(indexEN);
         var lastData = []
@@ -72,29 +85,94 @@
         lastData.reverse()
         // console.log(lastData);
 
+        /*
+          Busca los indices que concuerden con
+          la busqueda de la información enre 'KWH' y
+          'Base' para traer la info de las cabeceras
+        */
+        const indexTypeData = data.findIndex(numindexTypeData => numindexTypeData[2] === 'KWH');
+        var typeColNameProv = []
+        var typeColName = []
+        for (let k = indexTypeData; k < data.length; k++) {
+          const element = data[k];
+          typeColNameProv.push(element)
+        }
+        typeColNameProv.reverse()
+        // console.log(typeColNameProv);
+        const indexTypeDataEnds = typeColNameProv.findIndex(numindexTypeDataEnds => numindexTypeDataEnds[2] === 'Base');
+        // console.log(indexTypeDataEnds);
+        for (let z = indexTypeDataEnds; z < typeColNameProv.length; z++) {
+          const element = typeColNameProv[z];
+          // console.log(element);
+          typeColName.push(element)
+        }
+        typeColName.reverse()
+        // var EPTitle = ['ENERGIA PORTEADA']
+        // console.log(typeColName);
+        typeColName.unshift(['ENERGIA PORTEADA'])
+        // console.log(typeColName);
+        typeColName.splice(1, 1)
+        // console.log(typeColName);
+
+        let typeColNameClean = []
+        typeColName.map((row, index) => {
+          var dataColumnNames = row.filter(function (e) { return e !== null })
+          // console.log(dataColumnNames);
+          for (let i = 0; i < dataColumnNames.length; i++) {
+            const element = dataColumnNames[i];
+            // console.log(element);
+            if (element == 'ENERGIA PORTEADA') {
+              typeColNameClean.push(element)
+            }
+            if (element == 'Base') {
+              typeColNameClean.push(element)
+            }
+            if (element == 'Intermedia') {
+              typeColNameClean.push(element)
+            }
+            if (element == 'Punta') {
+              typeColNameClean.push(element)
+            }
+            if (element == 'TOTALES') {
+              typeColNameClean.push(element)
+            }
+            if (element == 'Fecha') {
+              typeColNameClean.push(element)
+            }
+          }
+        }) 
+        typeColNameClean.splice(9, typeColNameClean.length) 
+        typeColNameClean.pop()
+        typeColNameClean.push('Mes', 'Año')
+        
+        // console.log(typeColNameClean); PRINCIPAL
+
 
         /*Create Table HEAD*/
         data.map((row, index) => {
           /* Elimina del arreglo todos los valores igualados a null*/
           var newRow = row.filter(function (e) { return e !== null })
-          // console.log(newRow);            
-          //  console.log(newRow);
-
+          // console.log(newRow);    
+          // console.log(newRow);
           if (index == 0) {
             row.map((elemnt) => {
               if (elemnt !== null) {
                 var table = document.getElementById("tbl-data");
+                // console.log(elemnt);
                 generateHeadTable(table, elemnt);
+                generateHeadTitlesTable(table, typeColNameClean);
               }
             });
           }
         });
 
+
         /*Create Table ROWS*/
         lastData.map((row, index) => {
-          // console.log((index - 5));
+          // console.log(lastData);
           var newRow = row.filter(function (e) { return e !== null })
-          // console.log(newRow);
+          // console.log(lastData);
+          // console.log(newRow.length);
           var onlyCol = [] // Arreglo para separar las columnas
           var finalData = [] //Arreglo para hacer push de cada columna agregada
 
@@ -114,7 +192,6 @@
             const element = onlyCol[e];
             // console.log(element);
             finalData.push(element)
-
           }
 
           let date = new Date();
@@ -147,11 +224,14 @@
             finalData.push(mes)
             finalData.push(anio)
           }
-          // console.log(finalData);
+          var lastRow1 = finalData.filter(function (e) { return e !== null })
+          var lastRow = lastRow1.filter(function (e) { return e !== undefined })
+          // console.log(lastRow);
           if (index >= 0) {
             var table = document.getElementById("tbl-data");
             // console.log('rows: ', table.rows.length);
-            generateTableRow(table, finalData);
+            generateTableRow(table, lastRow);
+            // generateHeadTable(table, newR);
           }
           index++;
         })
@@ -159,7 +239,18 @@
 
     });
 
+    /*GENERA EL TITULO GLOBAL DE LA TABLA 'ENERGIA PORTEADA'*/
     function generateHeadTable(table, data) {
+      var tHead = table.createTHead();
+      var row = tHead.insertRow();
+      var th = document.createElement("th");
+      var text = document.createTextNode(data);
+      th.appendChild(text);
+      row.appendChild(th);
+    }
+
+    /*GENERA LOS TITLOUS DE LAS COLUMNAS DE LA TABLA*/
+    function generateHeadTitlesTable(table, data) {
       var tHead = table.createTHead();
       var row = tHead.insertRow();
       for (var key of data) {
@@ -169,6 +260,19 @@
         row.appendChild(th);
       }
     }
+
+    // function generateColNameTable(table, data) {
+    //   var tHead = table.createTHead();
+    //   var row = tHead.insertRow();
+    //   for (var key of data) {
+    //     var th = document.createElement("th");
+    //     var br = document.createElement("br")
+    //     var text = document.createTextNode(key);
+    //     th.appendChild(text);
+    //     row.appendChild(br);
+    //     row.appendChild(th);
+    //   }
+    // }
 
     function generateTableRow(table, data) {
 

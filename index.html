@@ -18,6 +18,27 @@
   <!-- <div class="contenedor_loader">
     <div class="loader"> </div>
   </div> -->
+  <style>
+    .cellStyle {
+      border: 1px solid black;
+      background-color: #9BE5FF;
+    }
+
+    #datos {
+      border: 1px solid black;
+      background-color: #CBF1FF;
+      width: 110px;
+
+    }
+
+    table th {
+      text-align: center;
+    }
+
+    table tr {
+      text-align: center;
+    }
+  </style>
   <div class="contenedor_loader" id="contenedor">
     <div class="loader"> </div>
   </div>
@@ -140,11 +161,11 @@
               typeColNameClean.push(element)
             }
           }
-        }) 
-        typeColNameClean.splice(9, typeColNameClean.length) 
+        })
+        typeColNameClean.splice(9, typeColNameClean.length)
         typeColNameClean.pop()
         typeColNameClean.push('Mes', 'Año')
-        
+
         // console.log(typeColNameClean); PRINCIPAL
 
 
@@ -281,6 +302,19 @@
         var cell = newRow.insertCell();
         var text = document.createTextNode(row);
         cell.appendChild(text);
+        cell.className = 'cellStyle';
+        cell.id = "des" + index;
+        var id = document.getElementById("des" + index).innerText;
+        if (id.length < 15) {
+          // console.log('Es dato');
+          cell.id = "datos";
+          // cell.textAlign = "right";
+        }
+        console.log(cell);
+        index++;
+        // console.log(id);
+        // console.log(id)
+        // console.log(cell);
       });
 
     }
